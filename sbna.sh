@@ -5,7 +5,7 @@ VERSION=1.0
 
 # 各变量默认值
 # GH_PROXY='https://ghproxy.com/' # 不稳定，暂不使用
-WS_PATH_DEFAULT='sba'
+WS_PATH_DEFAULT='wssing'
 WORK_DIR='/etc/sba'
 TEMP_DIR='/tmp/sba'
 TLS_SERVER=addons.mozilla.org
@@ -484,7 +484,7 @@ http {
       ssl_stapling_verify        off;
 
       # 反代 sing-box vless websocket
-      location /$WS_PATH-vl {
+      location /vl$WS_PATH {
         if (\$http_upgrade != "websocket") {
            return 404;
         }
@@ -499,7 +499,7 @@ http {
       }
 
       # 反代 sing-box websocket
-      location /$WS_PATH-vm {
+      location /vm$WS_PATH {
         if (\$http_upgrade != "websocket") {
            return 404;
         }
@@ -513,7 +513,7 @@ http {
         proxy_redirect                      off;
       }
 
-      location /$WS_PATH-tr {
+      location /tr$WS_PATH {
         if (\$http_upgrade != "websocket") {
            return 404;
         }
@@ -655,7 +655,7 @@ EOF
             "sniff_override_destination":true,
             "transport":{
                 "type":"ws",
-                "path":"/${WS_PATH}-vl",
+                "path":"/vl${WS_PATH}",
                 "max_early_data":2048,
                 "early_data_header_name":"Sec-WebSocket-Protocol"
             },
@@ -675,7 +675,7 @@ EOF
             "sniff_override_destination":true,
             "transport":{
                 "type":"ws",
-                "path":"/${WS_PATH}-vm",
+                "path":"/vm${WS_PATH}",
                 "max_early_data":2048,
                 "early_data_header_name":"Sec-WebSocket-Protocol"
             },
@@ -695,7 +695,7 @@ EOF
             "sniff_override_destination":true,
             "transport":{
                 "type":"ws",
-                "path":"/${WS_PATH}-tr",
+                "path":"/tr${WS_PATH}",
                 "max_early_data":2048,
                 "early_data_header_name":"Sec-WebSocket-Protocol"
             },
@@ -880,7 +880,7 @@ export_list() {
   grep -q 'metrics.*url' /etc/systemd/system/argo.service && QUICK_TUNNEL_URL=$(text 60)
 
   # 生成配置文件
-  VMESS="{ \"v\": \"2\", \"ps\": \"${NODE_NAME}-Vm\", \"add\": \"${SERVER}\", \"port\": \"443\", \"id\": \"${UUID}\", \"aid\": \"0\", \"scy\": \"none\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"${ARGO_DOMAIN}\", \"path\": \"/${WS_PATH}-vm\", \"tls\": \"tls\", \"sni\": \"${ARGO_DOMAIN}\", \"alpn\": \"\" }"
+  VMESS="{ \"v\": \"2\", \"ps\": \"${NODE_NAME}-VMess\", \"add\": \"${SERVER}\", \"port\": \"443\", \"id\": \"${UUID}\", \"aid\": \"0\", \"scy\": \"none\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"${ARGO_DOMAIN}\", \"path\": \"/vm${WS_PATH}\", \"tls\": \"tls\", \"sni\": \"${ARGO_DOMAIN}\", \"alpn\": \"\" }"
   cat > $WORK_DIR/list << EOF
 *******************************************
 ┌────────────────┐  ┌────────────────┐
@@ -891,11 +891,11 @@ export_list() {
 ----------------------------
 $(info "vless://${UUID}@${SERVER_IP_1}:443?security=reality&sni=${TLS_SERVER}&fp=chrome&pbk=${REALITY_PUBLIC}&type=tcp&flow=xtls-rprx-vision&encryption=none#${NODE_NAME}%20vless-reality-vision
 
-vless://${UUID}@${SERVER}:443?encryption=none&security=tls&sni=${ARGO_DOMAIN}&type=ws&host=${ARGO_DOMAIN}&path=%2F${WS_PATH}-vl#${NODE_NAME}-Vl
+vless://${UUID}@${SERVER}:443?encryption=none&security=tls&sni=${ARGO_DOMAIN}&type=ws&host=${ARGO_DOMAIN}&path=%2Fvl${WS_PATH}#${NODE_NAME}-VLESS
 
 vmess://$(base64 -w0 <<< $VMESS | sed "s/Cg==$//")
 
-trojan://${UUID}@${SERVER}:443?security=tls&sni=${ARGO_DOMAIN}&type=ws&host=${ARGO_DOMAIN}&path=%2F${WS_PATH}-tr#${NODE_NAME}-Tr
+trojan://${UUID}@${SERVER}:443?security=tls&sni=${ARGO_DOMAIN}&type=ws&host=${ARGO_DOMAIN}&path=%2Ftr${WS_PATH}#${NODE_NAME}-Trojan
 
 +++++ $(text 61) +++++")
 
@@ -908,11 +908,11 @@ trojan://${UUID}@${SERVER}:443?security=tls&sni=${ARGO_DOMAIN}&type=ws&host=${AR
 ----------------------------
 $(hint "vless://$(base64 -w0 <<< auto:${UUID}@${SERVER_IP_2}:443 | sed "s/Cg==$//")?remarks=${NODE_NAME}%20vless-reality-vision&obfs=none&tls=1&peer=$TLS_SERVER&mux=1&xtls=2&pbk=$REALITY_PUBLIC
 
-vless://$(base64 -w0 <<< auto:${UUID}@${SERVER}:443 | sed "s/Cg==$//")?remarks=${NODE_NAME}-Vl&obfsParam=${ARGO_DOMAIN}&path=/${WS_PATH}-vl?ed=2048&obfs=websocket&tls=1&peer=${ARGO_DOMAIN}&mux=1
+vless://$(base64 -w0 <<< auto:${UUID}@${SERVER}:443 | sed "s/Cg==$//")?remarks=${NODE_NAME}-VLESS&obfsParam=${ARGO_DOMAIN}&path=/vl${WS_PATH}?ed=2048&obfs=websocket&tls=1&peer=${ARGO_DOMAIN}&mux=1
 
-vmess://$(base64 -w0 <<< none:${UUID}@${SERVER}:443 | sed "s/Cg==$//")?remarks=${NODE_NAME}-Vm&obfsParam=${ARGO_DOMAIN}&path=/${WS_PATH}-vm?ed=2048&obfs=websocket&tls=1&peer=${ARGO_DOMAIN}&mux=1&alterId=0
+vmess://$(base64 -w0 <<< none:${UUID}@${SERVER}:443 | sed "s/Cg==$//")?remarks=${NODE_NAME}-VMess&obfsParam=${ARGO_DOMAIN}&path=/$vm{WS_PATH}?ed=2048&obfs=websocket&tls=1&peer=${ARGO_DOMAIN}&mux=1&alterId=0
 
-trojan://${UUID}@${SERVER}:443?peer=${ARGO_DOMAIN}&mux=1&plugin=obfs-local;obfs=websocket;obfs-host=${ARGO_DOMAIN};obfs-uri=/${WS_PATH}-tr?ed=2048#${NODE_NAME}-Tr")
+trojan://${UUID}@${SERVER}:443?peer=${ARGO_DOMAIN}&mux=1&plugin=obfs-local;obfs=websocket;obfs-host=${ARGO_DOMAIN};obfs-uri=/tr${WS_PATH}?ed=2048#${NODE_NAME}-Trojan")
 
 *******************************************
 ┌────────────────┐
@@ -923,11 +923,11 @@ trojan://${UUID}@${SERVER}:443?peer=${ARGO_DOMAIN}&mux=1&plugin=obfs-local;obfs=
 ----------------------------
 $(info "- {name: \"${NODE_NAME} vless-reality-vision\", type: vless, server: ${SERVER_IP}, port: 443, uuid: ${UUID}, network: tcp, udp: true, tls: true, servername: ${TLS_SERVER}, flow: xtls-rprx-vision, client-fingerprint: chrome, reality-opts: {public-key: ${REALITY_PUBLIC}, short-id: \"\"}, smux: { enabled: true, protocol: 'h2mux', padding: true, max-connections: '0', min-streams: '0', max-streams: '8', statistic: true, only-tcp: false } }
 
-- {name: \"${NODE_NAME}-Vl\", type: vless, server: ${SERVER}, port: 443, uuid: ${UUID}, tls: true, servername: ${ARGO_DOMAIN}, skip-cert-verify: false, network: ws, ws-opts: { path: /${WS_PATH}-vl?ed=2048, max-early-data: 2048, early-data-header-name: Sec-WebSocket-Protocol, headers: { Host: ${ARGO_DOMAIN}}}, udp: true, smux: { enabled: true, protocol: 'h2mux', padding: true, max-connections: '0', min-streams: '0', max-streams: '8', statistic: true, only-tcp: false } }
+- {name: \"${NODE_NAME}-VLESS\", type: vless, server: ${SERVER}, port: 443, uuid: ${UUID}, tls: true, servername: ${ARGO_DOMAIN}, skip-cert-verify: false, network: ws, ws-opts: { path: /vl${WS_PATH}?ed=2048, max-early-data: 2048, early-data-header-name: Sec-WebSocket-Protocol, headers: { Host: ${ARGO_DOMAIN}}}, udp: true, smux: { enabled: true, protocol: 'h2mux', padding: true, max-connections: '0', min-streams: '0', max-streams: '8', statistic: true, only-tcp: false } }
 
-- {name: \"${NODE_NAME}-Vm\", type: vmess, server: ${SERVER}, port: 443, uuid: ${UUID}, alterId: 0, cipher: none, tls: true, skip-cert-verify: true, network: ws, ws-opts: { path: /${WS_PATH}-vm?ed=2048, max-early-data: 2048, early-data-header-name: Sec-WebSocket-Protocol, headers: {Host: ${ARGO_DOMAIN}}}, udp: true, smux: { enabled: true, protocol: 'h2mux', padding: true, max-connections: '0', min-streams: '0', max-streams: '8', statistic: true, only-tcp: false } }
+- {name: \"${NODE_NAME}-VMess\", type: vmess, server: ${SERVER}, port: 443, uuid: ${UUID}, alterId: 0, cipher: none, tls: true, skip-cert-verify: true, network: ws, ws-opts: { path: /vm${WS_PATH}?ed=2048, max-early-data: 2048, early-data-header-name: Sec-WebSocket-Protocol, headers: {Host: ${ARGO_DOMAIN}}}, udp: true, smux: { enabled: true, protocol: 'h2mux', padding: true, max-connections: '0', min-streams: '0', max-streams: '8', statistic: true, only-tcp: false } }
 
-- {name: \"${NODE_NAME}-Tr\", type: trojan, server: ${SERVER}, port: 443, password: ${UUID}, udp: true, tls: true, sni: ${ARGO_DOMAIN}, skip-cert-verify: false, network: ws, ws-opts: { path: /${WS_PATH}-tr?ed=2048, max-early-data: 2048, early-data-header-name: Sec-WebSocket-Protocol, headers: { Host: ${ARGO_DOMAIN} } }, smux: { enabled: true, protocol: 'h2mux', padding: true, max-connections: '0', min-streams: '0', max-streams: '8', statistic: true, only-tcp: false } }")
+- {name: \"${NODE_NAME}-Trojan\", type: trojan, server: ${SERVER}, port: 443, password: ${UUID}, udp: true, tls: true, sni: ${ARGO_DOMAIN}, skip-cert-verify: false, network: ws, ws-opts: { path: /tr${WS_PATH}?ed=2048, max-early-data: 2048, early-data-header-name: Sec-WebSocket-Protocol, headers: { Host: ${ARGO_DOMAIN} } }, smux: { enabled: true, protocol: 'h2mux', padding: true, max-connections: '0', min-streams: '0', max-streams: '8', statistic: true, only-tcp: false } }")
 
 *******************************************
 ┌────────────────┐
@@ -968,7 +968,7 @@ $(hint "{
       },
       {
         \"type\": \"vless\",
-        \"tag\": \"${NODE_NAME}-Vl\",
+        \"tag\": \"${NODE_NAME}-VLESS\",
         \"server\":\"${SERVER}\",
         \"server_port\":443,
         \"uuid\":\"${UUID}\",
@@ -982,7 +982,7 @@ $(hint "{
         },
         \"transport\": {
           \"type\":\"ws\",
-          \"path\":\"/${WS_PATH}-vl\",
+          \"path\":\"/vl${WS_PATH}\",
           \"headers\": {
             \"Host\": \"${ARGO_DOMAIN}\"
           },
@@ -998,7 +998,7 @@ $(hint "{
       },
       {
         \"type\": \"vmess\",
-        \"tag\": \"${NODE_NAME}-Vm\",
+        \"tag\": \"${NODE_NAME}-VMESS\",
         \"server\":\"${SERVER}\",
         \"server_port\":443,
         \"uuid\":\"${UUID}\",
@@ -1012,7 +1012,7 @@ $(hint "{
         },
         \"transport\": {
           \"type\":\"ws\",
-          \"path\":\"/${WS_PATH}-vm\",
+          \"path\":\"/vm${WS_PATH}\",
           \"headers\": {
             \"Host\": \"${ARGO_DOMAIN}\"
           },
@@ -1028,7 +1028,7 @@ $(hint "{
       },
       {
         \"type\":\"trojan\",
-        \"tag\":\"${NODE_NAME}-Tr\",
+        \"tag\":\"${NODE_NAME}-Trojan\",
         \"server\": \"${SERVER}\",
         \"server_port\": 443,
         \"password\": \"${UUID}\",
@@ -1042,7 +1042,7 @@ $(hint "{
         },
         \"transport\": {
             \"type\":\"ws\",
-            \"path\":\"/${WS_PATH}-tr\",
+            \"path\":\"/tr${WS_PATH}\",
             \"headers\": {
               \"Host\": \"${ARGO_DOMAIN}\"
             },
