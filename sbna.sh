@@ -793,6 +793,28 @@ LimitNOFILE=infinity
 WantedBy=multi-user.target
 EOF
 
+  # 修改 Nginx 启动命令
+  mv mv /etc/resolv.conf /etc/resolv.conf.bak mv /etc/resolv.conf /etc/resolv.conf.bak.bak
+  cat > /lib/systemd/system/nginx.service << EOF
+[Unit]
+Description=A high performance web server and a reverse proxy server
+Documentation=man:nginx(8)
+After=network.target nss-lookup.target
+
+[Service]
+Type=forking
+PIDFile=/run/nginx.pid
+ExecStartPre=/usr/sbin/nginx -t -q -g 'daemon on; master_process on;' -c /etc/sba/nginx.conf
+ExecStart=/usr/sbin/nginx -g 'daemon on; master_process on;' -c /etc/sba/nginx.conf
+ExecReload=/usr/sbin/nginx -g 'daemon on; master_process on;' -s reload
+ExecStop=-/sbin/start-stop-daemon --quiet --stop --retry QUIT/5 --pidfile /run/nginx.pid
+TimeoutStopSec=5
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
   # 生成 Nginx 配置文件
   json_nginx
 
