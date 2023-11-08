@@ -815,6 +815,9 @@ KillMode=mixed
 WantedBy=multi-user.target
 EOF
 
+  # 重载systemctl
+  systemctl daemon-reload
+  
   # 生成 Nginx 配置文件
   json_nginx
 
