@@ -794,7 +794,7 @@ WantedBy=multi-user.target
 EOF
 
   # 修改 Nginx 启动命令
-  mv mv /etc/resolv.conf /etc/resolv.conf.bak mv /etc/resolv.conf /etc/resolv.conf.bak.bak
+  mv /lib/systemd/system/nginx.service /lib/systemd/system/nginx.service.bak
   cat > /lib/systemd/system/nginx.service << EOF
 [Unit]
 Description=A high performance web server and a reverse proxy server
