@@ -161,7 +161,7 @@ config_check() {
 
 set_as_entrance() {
     if [[ ! -f "${SCRIPT_FILE_PATH}" ]]; then
-        wget --no-check-certificate -O ${SCRIPT_FILE_PATH} https://raw.githubusercontent.com/H0ver/sing-box-install/main/install.sh
+        wget --no-check-certificate -O ${SCRIPT_FILE_PATH} https://raw.githubusercontent.com/H0ver/sing-box-scripts/main/install.sh
         chmod +x ${SCRIPT_FILE_PATH}
     fi
 }
@@ -299,7 +299,7 @@ download_config() {
         mkdir -p ${CONFIG_FILE_PATH}
     fi
     if [[ ! -f "${CONFIG_FILE_PATH}/config.json" ]]; then
-        wget --no-check-certificate -O ${CONFIG_FILE_PATH}/config.json https://raw.githubusercontent.com/H0ver/sing-box-install/main/shadowsocks2022/server_config.json
+        wget --no-check-certificate -O ${CONFIG_FILE_PATH}/config.json https://raw.githubusercontent.com/H0ver/sing-box-scripts/main/config.json
         if [[ $? -ne 0 ]]; then
             LOGE "下载sing-box配置模板失败,请检查网络"
             exit 1
