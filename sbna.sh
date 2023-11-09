@@ -482,6 +482,8 @@ http {
       ssl_session_tickets        on;
       ssl_stapling               off;
       ssl_stapling_verify        off;
+      ssl_early_data             on;
+      proxy_set_header           Early-Data $ssl_early_data;
 
       # 反代 sing-box vless websocket
       location /vl$WS_PATH {
@@ -815,8 +817,9 @@ KillMode=mixed
 WantedBy=multi-user.target
 EOF
 
-  # 重载systemctl
+  # 重载 Nginx 启动命令
   systemctl daemon-reload
+  systemctl reload nginx
   
   # 生成 Nginx 配置文件
   json_nginx
