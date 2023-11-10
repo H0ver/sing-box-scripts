@@ -483,7 +483,6 @@ http {
       ssl_stapling               off;
       ssl_stapling_verify        off;
       ssl_early_data             on;
-      proxy_set_header           Early-Data $ssl_early_data;
 
       # 反代 sing-box vless websocket
       location /vl$WS_PATH {
@@ -498,6 +497,7 @@ http {
         proxy_set_header X-Forwarded-For    \$proxy_add_x_forwarded_for;
         proxy_set_header Host               \$host;
         proxy_redirect                      off;
+        proxy_set_header                    Early-Data $ssl_early_data;
       }
 
       # 反代 sing-box websocket
@@ -513,6 +513,7 @@ http {
         proxy_set_header X-Forwarded-For    \$proxy_add_x_forwarded_for;
         proxy_set_header Host               \$host;
         proxy_redirect                      off;
+        proxy_set_header                    Early-Data $ssl_early_data;
       }
 
       location /tr$WS_PATH {
@@ -527,6 +528,7 @@ http {
         proxy_set_header X-Forwarded-For    \$proxy_add_x_forwarded_for;
         proxy_set_header Host               \$host;
         proxy_redirect                      off;
+        proxy_set_header                    Early-Data $ssl_early_data;
       }
 EOF
   [ -n "$METRICS_PORT" ] && cat >> $WORK_DIR/nginx.conf << EOF
