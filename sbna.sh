@@ -843,13 +843,13 @@ KillMode=mixed
 WantedBy=multi-user.target
 EOF
 
-  # 重载 Nginx 启动命令
-  systemctl daemon-reload
-  systemctl reload nginx
-  
   # 生成 Nginx 配置文件
   json_nginx
 
+  # 重载 Nginx 启动命令
+  systemctl daemon-reload
+  systemctl restart nginx
+  
   # 再次检测状态，运行 Argo 和 Sing-box
   check_install
   case "${STATUS[0]}" in
