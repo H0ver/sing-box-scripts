@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # 当前脚本版本号
-VERSION=1.0
+VERSION=1.0 mod
 
 # 各变量默认值
 # GH_PROXY='https://ghproxy.com/' # 不稳定，暂不使用
@@ -660,6 +660,15 @@ EOF
                 "max_early_data":2048,
                 "early_data_header_name":"Sec-WebSocket-Protocol"
             },
+            "multiplex":{
+                "enabled":true,
+                "padding":true,
+                "brutal":{
+                    "enabled":true,
+                    "up_mbps":1000,
+                    "down_mbps":1000
+                }
+            },
             "users":[
                 {
                     "uuid":"${UUID}",
@@ -680,6 +689,15 @@ EOF
                 "max_early_data":2048,
                 "early_data_header_name":"Sec-WebSocket-Protocol"
             },
+            "multiplex":{
+                "enabled":true,
+                "padding":true,
+                "brutal":{
+                    "enabled":true,
+                    "up_mbps":1000,
+                    "down_mbps":1000
+                }
+            },
             "users":[
                 {
                     "uuid":"${UUID}",
@@ -699,6 +717,15 @@ EOF
                 "path":"/tr${WS_PATH}",
                 "max_early_data":2048,
                 "early_data_header_name":"Sec-WebSocket-Protocol"
+            },
+            "multiplex":{
+                "enabled":true,
+                "padding":true,
+                "brutal":{
+                    "enabled":true,
+                    "up_mbps":1000,
+                    "down_mbps":1000
+                }
             },
             "users":[
                 {
