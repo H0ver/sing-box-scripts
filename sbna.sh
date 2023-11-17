@@ -5,7 +5,7 @@ VERSION=1.0.2
 
 # 各变量默认值
 GH_PROXY='https://gh-proxy.com/'
-WS_PATH_DEFAULT='sba'
+WS_PATH_DEFAULT='sing'
 WORK_DIR='/etc/sba'
 TEMP_DIR='/tmp/sba'
 TLS_SERVER=addons.mozilla.org
@@ -484,9 +484,10 @@ http {
       ssl_session_tickets        on;
       ssl_stapling               off;
       ssl_stapling_verify        off;
+      ssl_early_data             on;
 
-      # 反代 sing-box vless websocket
-      location /$WS_PATH-vl {
+      # 反代 sing-box vless httpupgrade
+      location /vlup$WS_PATH {
         if (\$http_upgrade != "websocket") {
            return 404;
         }
@@ -500,8 +501,8 @@ http {
         proxy_redirect                      off;
       }
 
-      # 反代 sing-box websocket
-      location /$WS_PATH-vm {
+      # 反代 sing-box vmess httpupgrade
+      location /vmup$WS_PATH {
         if (\$http_upgrade != "websocket") {
            return 404;
         }
@@ -515,7 +516,8 @@ http {
         proxy_redirect                      off;
       }
 
-      location /$WS_PATH-tr {
+      # 反代 sing-box vless websocket
+      location /vlws$WS_PATH {
         if (\$http_upgrade != "websocket") {
            return 404;
         }
@@ -528,6 +530,22 @@ http {
         proxy_set_header Host               \$host;
         proxy_redirect                      off;
       }
+
+      # 反代 sing-box vmess websocket
+      location /vmws$WS_PATH {
+        if (\$http_upgrade != "websocket") {
+           return 404;
+        }
+        proxy_pass                          http://127.0.0.1:3014;
+        proxy_http_version                  1.1;
+        proxy_set_header Upgrade            \$http_upgrade;
+        proxy_set_header Connection         "upgrade";
+        proxy_set_header X-Real-IP          \$remote_addr;
+        proxy_set_header X-Forwarded-For    \$proxy_add_x_forwarded_for;
+        proxy_set_header Host               \$host;
+        proxy_redirect                      off;
+      }
+
 EOF
   [ -n "$METRICS_PORT" ] && cat >> $WORK_DIR/nginx.conf << EOF
 
@@ -617,46 +635,11 @@ EOF
 {
     "log":{
         "disabled":false,
-        "level":"error",
+        "level":"debug",
         "output":"$WORK_DIR/logs/box.log",
         "timestamp":true
     },
     "inbounds":[
-        {
-            "type":"vless",
-            "listen":"::",
-            "listen_port":443,
-            "users":[
-                {
-                    "uuid":"${UUID}",
-                    "flow":"xtls-rprx-vision"
-                }
-            ],
-            "tls":{
-                "enabled":true,
-                "server_name":"${TLS_SERVER}",
-                "reality":{
-                    "enabled":true,
-                    "handshake":{
-                        "server":"127.0.0.1",
-                        "server_port":3010
-                    },
-                    "private_key":"${REALITY_PRIVATE}",
-                    "short_id":[
-                        ""
-                    ]
-                }
-            },
-            "multiplex":{
-                "enabled":true,
-                "padding":true,
-                "brutal":{
-                    "enabled":true,
-                    "up_mbps":1000,
-                    "down_mbps":1000
-                }
-            }
-        },
         {
             "type":"vless",
             "tag":"vless-in",
@@ -665,10 +648,8 @@ EOF
             "sniff":true,
             "sniff_override_destination":true,
             "transport":{
-                "type":"ws",
-                "path":"/${WS_PATH}-vl",
-                "max_early_data":2048,
-                "early_data_header_name":"Sec-WebSocket-Protocol"
+                "type":"httpupgrade",
+                "path":"/vlup${WS_PATH}"
             },
             "multiplex":{
                 "enabled":true,
@@ -694,10 +675,8 @@ EOF
             "sniff":true,
             "sniff_override_destination":true,
             "transport":{
-                "type":"ws",
-                "path":"/${WS_PATH}-vm",
-                "max_early_data":2048,
-                "early_data_header_name":"Sec-WebSocket-Protocol"
+                "type":"httpupgrade",
+                "path":"/vmup${WS_PATH}"
             },
             "multiplex":{
                 "enabled":true,
@@ -716,15 +695,15 @@ EOF
             ]
         },
         {
-            "type":"trojan",
-            "tag":"trojan-in",
+            "type":"vless",
+            "tag":"vless-in",
             "listen":"127.0.0.1",
             "listen_port":3013,
             "sniff":true,
             "sniff_override_destination":true,
             "transport":{
                 "type":"ws",
-                "path":"/${WS_PATH}-tr",
+                "path":"/vlws${WS_PATH}",
                 "max_early_data":2048,
                 "early_data_header_name":"Sec-WebSocket-Protocol"
             },
@@ -739,7 +718,37 @@ EOF
             },
             "users":[
                 {
-                    "password":"${UUID}"
+                    "uuid":"${UUID}",
+                    "flow":""
+                }
+            ]
+        },
+        {
+            "type":"vmess",
+            "tag":"vmess-in",
+            "listen":"127.0.0.1",
+            "listen_port":3014,
+            "sniff":true,
+            "sniff_override_destination":true,
+            "transport":{
+                "type":"ws",
+                "path":"/vmws${WS_PATH}",
+                "max_early_data":2048,
+                "early_data_header_name":"Sec-WebSocket-Protocol"
+            },
+            "multiplex":{
+                "enabled":true,
+                "padding":true,
+                "brutal":{
+                    "enabled":true,
+                    "up_mbps":1000,
+                    "down_mbps":1000
+                }
+            },
+            "users":[
+                {
+                    "uuid":"${UUID}",
+                    "alterId":0
                 }
             ]
         }
@@ -831,8 +840,37 @@ LimitNOFILE=infinity
 WantedBy=multi-user.target
 EOF
 
+  # 停止Nginx 服务
+  systemctl stop nginx
+
+  # 修改 Nginx 启动命令
+  mv /lib/systemd/system/nginx.service /lib/systemd/system/nginx.service.bak
+  cat > /lib/systemd/system/nginx.service << EOF
+[Unit]
+Description=A high performance web server and a reverse proxy server
+Documentation=man:nginx(8)
+After=network.target nss-lookup.target
+
+[Service]
+Type=forking
+PIDFile=/run/nginx.pid
+ExecStartPre=/usr/sbin/nginx -t -q -g 'daemon on; master_process on;' -c /etc/sba/nginx.conf
+ExecStart=/usr/sbin/nginx -g 'daemon on; master_process on;' -c /etc/sba/nginx.conf
+ExecReload=/usr/sbin/nginx -g 'daemon on; master_process on;' -s reload
+ExecStop=-/sbin/start-stop-daemon --quiet --stop --retry QUIT/5 --pidfile /run/nginx.pid
+TimeoutStopSec=5
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
   # 生成 Nginx 配置文件
   json_nginx
+
+  # 重启 Nginx 服务
+  systemctl daemon-reload
+  systemctl start nginx
 
   # 再次检测状态，运行 Argo 和 Sing-box
   check_install
@@ -864,7 +902,7 @@ create_shortcut() {
   cat > $WORK_DIR/sb.sh << EOF
 #!/usr/bin/env bash
 
-bash <(wget --no-check-certificate -qO- https://raw.githubusercontent.com/fscarmen/sba/main/sba.sh) \$1
+bash <(wget --no-check-certificate -qO- https://raw.githubusercontent.com/H0ver/sing-box-scripts/main/sbna.sh) \$1
 EOF
   chmod +x $WORK_DIR/sb.sh
   ln -sf $WORK_DIR/sb.sh /usr/bin/sb
@@ -918,7 +956,7 @@ export_list() {
   grep -q 'metrics.*url' /etc/systemd/system/argo.service && QUICK_TUNNEL_URL=$(text 60)
 
   # 生成配置文件
-  VMESS="{ \"v\": \"2\", \"ps\": \"${NODE_NAME}-Vm\", \"add\": \"${SERVER}\", \"port\": \"443\", \"id\": \"${UUID}\", \"aid\": \"0\", \"scy\": \"none\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"${ARGO_DOMAIN}\", \"path\": \"/${WS_PATH}-vm\", \"tls\": \"tls\", \"sni\": \"${ARGO_DOMAIN}\", \"alpn\": \"\" }"
+  VMESS-httpupgrade="{ \"v\": \"2\", \"ps\": \"${NODE_NAME}-vmess\", \"add\": \"${SERVER}\", \"port\": \"443\", \"id\": \"${UUID}\", \"aid\": \"0\", \"scy\": \"none\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"${ARGO_DOMAIN}\", \"path\": \"/vmws${WS_PATH}\", \"tls\": \"tls\", \"sni\": \"${ARGO_DOMAIN}\", \"alpn\": \"\" }"
   cat > $WORK_DIR/list << EOF
 *******************************************
 ┌────────────────┐  ┌────────────────┐
@@ -927,13 +965,9 @@ export_list() {
 │                │  │                │
 └────────────────┘  └────────────────┘
 ----------------------------
-$(info "vless://${UUID}@${SERVER_IP_1}:443?security=reality&sni=${TLS_SERVER}&fp=chrome&pbk=${REALITY_PUBLIC}&type=tcp&flow=xtls-rprx-vision&encryption=none#${NODE_NAME}%20vless-reality-vision
-
-vless://${UUID}@${SERVER}:443?encryption=none&security=tls&sni=${ARGO_DOMAIN}&type=ws&host=${ARGO_DOMAIN}&path=%2F${WS_PATH}-vl#${NODE_NAME}-Vl
+$(info "vless://${UUID}@${SERVER}:443?encryption=none&security=tls&sni=${ARGO_DOMAIN}&type=ws&host=${ARGO_DOMAIN}&path=%2Fvlws${WS_PATH}#${NODE_NAME}-vless
 
 vmess://$(base64 -w0 <<< $VMESS | sed "s/Cg==$//")
-
-trojan://${UUID}@${SERVER}:443?security=tls&sni=${ARGO_DOMAIN}&type=ws&host=${ARGO_DOMAIN}&path=%2F${WS_PATH}-tr#${NODE_NAME}-Tr
 
 +++++ $(text 61) +++++")
 
@@ -944,13 +978,9 @@ trojan://${UUID}@${SERVER}:443?security=tls&sni=${ARGO_DOMAIN}&type=ws&host=${AR
 │                │
 └────────────────┘
 ----------------------------
-$(hint "vless://$(base64 -w0 <<< auto:${UUID}@${SERVER_IP_2}:443 | sed "s/Cg==$//")?remarks=${NODE_NAME}%20vless-reality-vision&obfs=none&tls=1&peer=$TLS_SERVER&mux=1&xtls=2&pbk=$REALITY_PUBLIC
+$(hint "vless://$(base64 -w0 <<< auto:${UUID}@${SERVER}:443 | sed "s/Cg==$//")?remarks=${NODE_NAME}-vless&obfsParam=${ARGO_DOMAIN}&path=/$vlws{WS_PATH}?ed=2048&obfs=websocket&tls=1&peer=${ARGO_DOMAIN}&mux=1
 
-vless://$(base64 -w0 <<< auto:${UUID}@${SERVER}:443 | sed "s/Cg==$//")?remarks=${NODE_NAME}-Vl&obfsParam=${ARGO_DOMAIN}&path=/${WS_PATH}-vl?ed=2048&obfs=websocket&tls=1&peer=${ARGO_DOMAIN}&mux=1
-
-vmess://$(base64 -w0 <<< none:${UUID}@${SERVER}:443 | sed "s/Cg==$//")?remarks=${NODE_NAME}-Vm&obfsParam=${ARGO_DOMAIN}&path=/${WS_PATH}-vm?ed=2048&obfs=websocket&tls=1&peer=${ARGO_DOMAIN}&mux=1&alterId=0
-
-trojan://${UUID}@${SERVER}:443?peer=${ARGO_DOMAIN}&mux=1&plugin=obfs-local;obfs=websocket;obfs-host=${ARGO_DOMAIN};obfs-uri=/${WS_PATH}-tr?ed=2048#${NODE_NAME}-Tr")
+vmess://$(base64 -w0 <<< none:${UUID}@${SERVER}:443 | sed "s/Cg==$//")?remarks=${NODE_NAME}-Vm&obfsParam=${ARGO_DOMAIN}&path=/$vmws{WS_PATH}?ed=2048&obfs=websocket&tls=1&peer=${ARGO_DOMAIN}&mux=1&alterId=0
 
 *******************************************
 ┌────────────────┐
@@ -959,13 +989,9 @@ trojan://${UUID}@${SERVER}:443?peer=${ARGO_DOMAIN}&mux=1&plugin=obfs-local;obfs=
 │                │
 └────────────────┘
 ----------------------------
-$(info "- {name: \"${NODE_NAME} vless-reality-vision\", type: vless, server: ${SERVER_IP}, port: 443, uuid: ${UUID}, network: tcp, udp: true, tls: true, servername: ${TLS_SERVER}, flow: xtls-rprx-vision, client-fingerprint: chrome, reality-opts: {public-key: ${REALITY_PUBLIC}, short-id: \"\"}, smux: { enabled: true, protocol: 'h2mux', padding: true, max-connections: '0', min-streams: '0', max-streams: '8', statistic: true, only-tcp: false } }
+$(info "- {name: \"${NODE_NAME}-vless\", type: vless, server: ${SERVER}, port: 443, uuid: ${UUID}, tls: true, servername: ${ARGO_DOMAIN}, skip-cert-verify: false, network: ws, ws-opts: { path: /vlws${WS_PATH}?ed=2048, max-early-data: 2048, early-data-header-name: Sec-WebSocket-Protocol, headers: { Host: ${ARGO_DOMAIN}}}, udp: true, smux: { enabled: true, protocol: 'h2mux', padding: true, max-connections: '0', min-streams: '0', max-streams: '8', statistic: true, only-tcp: false } }
 
-- {name: \"${NODE_NAME}-Vl\", type: vless, server: ${SERVER}, port: 443, uuid: ${UUID}, tls: true, servername: ${ARGO_DOMAIN}, skip-cert-verify: false, network: ws, ws-opts: { path: /${WS_PATH}-vl?ed=2048, max-early-data: 2048, early-data-header-name: Sec-WebSocket-Protocol, headers: { Host: ${ARGO_DOMAIN}}}, udp: true, smux: { enabled: true, protocol: 'h2mux', padding: true, max-connections: '0', min-streams: '0', max-streams: '8', statistic: true, only-tcp: false } }
-
-- {name: \"${NODE_NAME}-Vm\", type: vmess, server: ${SERVER}, port: 443, uuid: ${UUID}, alterId: 0, cipher: none, tls: true, skip-cert-verify: true, network: ws, ws-opts: { path: /${WS_PATH}-vm?ed=2048, max-early-data: 2048, early-data-header-name: Sec-WebSocket-Protocol, headers: {Host: ${ARGO_DOMAIN}}}, udp: true, smux: { enabled: true, protocol: 'h2mux', padding: true, max-connections: '0', min-streams: '0', max-streams: '8', statistic: true, only-tcp: false } }
-
-- {name: \"${NODE_NAME}-Tr\", type: trojan, server: ${SERVER}, port: 443, password: ${UUID}, udp: true, tls: true, sni: ${ARGO_DOMAIN}, skip-cert-verify: false, network: ws, ws-opts: { path: /${WS_PATH}-tr?ed=2048, max-early-data: 2048, early-data-header-name: Sec-WebSocket-Protocol, headers: { Host: ${ARGO_DOMAIN} } }, smux: { enabled: true, protocol: 'h2mux', padding: true, max-connections: '0', min-streams: '0', max-streams: '8', statistic: true, only-tcp: false } }")
+- {name: \"${NODE_NAME}-vmess\", type: vmess, server: ${SERVER}, port: 443, uuid: ${UUID}, alterId: 0, cipher: none, tls: true, skip-cert-verify: true, network: ws, ws-opts: { path: /vmess${WS_PATH}?ed=2048, max-early-data: 2048, early-data-header-name: Sec-WebSocket-Protocol, headers: {Host: ${ARGO_DOMAIN}}}, udp: true, smux: { enabled: true, protocol: 'h2mux', padding: true, max-connections: '0', min-streams: '0', max-streams: '8', statistic: true, only-tcp: false } }
 
 *******************************************
 ┌────────────────┐
@@ -977,36 +1003,8 @@ $(info "- {name: \"${NODE_NAME} vless-reality-vision\", type: vless, server: ${S
 $(hint "{
   \"outbounds\":[
       {
-        \"type\":\"vless\",
-        \"tag\":\"${NODE_NAME} vless-reality-vision\",
-        \"server\":\"${SERVER_IP}\",
-        \"server_port\":443,
-        \"uuid\":\"${UUID}\",
-        \"flow\":\"xtls-rprx-vision\",
-        \"packet_encoding\":\"xudp\",
-        \"tls\":{
-            \"enabled\":true,
-            \"server_name\":\"${TLS_SERVER}\",
-            \"utls\":{
-                \"enabled\":true,
-                \"fingerprint\":\"chrome\"
-            },
-            \"reality\":{
-                \"enabled\":true,
-                \"public_key\":\"${REALITY_PUBLIC}\",
-                \"short_id\":\"\"
-            }
-        },
-        \"multiplex\":{
-            \"enabled\":true,
-            \"protocol\":\"h2mux\",
-            \"max_connections\":16,
-            \"padding\": true
-        }
-      },
-      {
         \"type\": \"vless\",
-        \"tag\": \"${NODE_NAME}-Vl\",
+        \"tag\": \"${NODE_NAME}-vless\",
         \"server\":\"${SERVER}\",
         \"server_port\":443,
         \"uuid\":\"${UUID}\",
@@ -1020,7 +1018,7 @@ $(hint "{
         },
         \"transport\": {
           \"type\":\"ws\",
-          \"path\":\"/${WS_PATH}-vl\",
+          \"path\":\"/vlws${WS_PATH}\",
           \"headers\": {
             \"Host\": \"${ARGO_DOMAIN}\"
           },
@@ -1036,7 +1034,7 @@ $(hint "{
       },
       {
         \"type\": \"vmess\",
-        \"tag\": \"${NODE_NAME}-Vm\",
+        \"tag\": \"${NODE_NAME}-vmess\",
         \"server\":\"${SERVER}\",
         \"server_port\":443,
         \"uuid\":\"${UUID}\",
@@ -1050,7 +1048,7 @@ $(hint "{
         },
         \"transport\": {
           \"type\":\"ws\",
-          \"path\":\"/${WS_PATH}-vm\",
+          \"path\":\"/vmws${WS_PATH}\",
           \"headers\": {
             \"Host\": \"${ARGO_DOMAIN}\"
           },
@@ -1061,36 +1059,6 @@ $(hint "{
           \"enabled\":true,
           \"protocol\":\"h2mux\",
           \"max_streams\":16,
-          \"padding\": true
-        }
-      },
-      {
-        \"type\":\"trojan\",
-        \"tag\":\"${NODE_NAME}-Tr\",
-        \"server\": \"${SERVER}\",
-        \"server_port\": 443,
-        \"password\": \"${UUID}\",
-        \"tls\": {
-          \"enabled\":true,
-          \"server_name\":\"${ARGO_DOMAIN}\",
-          \"utls\": {
-            \"enabled\":true,
-            \"fingerprint\":\"chrome\"
-          }
-        },
-        \"transport\": {
-            \"type\":\"ws\",
-            \"path\":\"/${WS_PATH}-tr\",
-            \"headers\": {
-              \"Host\": \"${ARGO_DOMAIN}\"
-            },
-            \"max_early_data\":2408,
-            \"early_data_header_name\":\"Sec-WebSocket-Protocol\"
-          },
-        \"multiplex\": {
-          \"enabled\":true,
-          \"protocol\":\"h2mux\",
-          \"max_connections\": 16,
           \"padding\": true
         }
       }
