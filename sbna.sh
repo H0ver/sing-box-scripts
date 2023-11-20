@@ -642,7 +642,7 @@ EOF
     "inbounds":[
         {
             "type":"vless",
-            "tag":"vless-in",
+            "tag":"vless_up-in",
             "listen":"127.0.0.1",
             "listen_port":3011,
             "sniff":true,
@@ -669,7 +669,7 @@ EOF
         },
         {
             "type":"vmess",
-            "tag":"vmess-in",
+            "tag":"vmess_up-in",
             "listen":"127.0.0.1",
             "listen_port":3012,
             "sniff":true,
@@ -696,7 +696,7 @@ EOF
         },
         {
             "type":"vless",
-            "tag":"vless-in",
+            "tag":"vless_ws-in",
             "listen":"127.0.0.1",
             "listen_port":3013,
             "sniff":true,
@@ -725,7 +725,7 @@ EOF
         },
         {
             "type":"vmess",
-            "tag":"vmess-in",
+            "tag":"vmess_ws-in",
             "listen":"127.0.0.1",
             "listen_port":3014,
             "sniff":true,
