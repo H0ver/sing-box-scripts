@@ -840,6 +840,9 @@ LimitNOFILE=infinity
 WantedBy=multi-user.target
 EOF
 
+  # 生成 Nginx 配置文件
+  json_nginx
+
   # 停止Nginx 服务
   systemctl stop nginx
 
@@ -864,9 +867,6 @@ KillMode=mixed
 [Install]
 WantedBy=multi-user.target
 EOF
-
-  # 生成 Nginx 配置文件
-  json_nginx
 
   # 重启 Nginx 服务
   systemctl daemon-reload
