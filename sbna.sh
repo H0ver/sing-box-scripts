@@ -235,7 +235,6 @@ EOF
       systemctl enable --now $APP
     fi
     [ $(ps -ef | grep "$WORK_DIR/nginx" | wc -l) -le 1 ] && nginx -c $WORK_DIR/nginx.conf
-    fi
     
   elif [ "$ENABLE_DISABLE" = 'disable' ]; then
     if [ "$SYSTEM" = 'Alpine' ]; then
