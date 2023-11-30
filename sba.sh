@@ -455,7 +455,7 @@ ingress:
     service: http://localhost:3013
     path: /vlwssing/*  
   - hostname: ${ARGO_DOMAIN}
-    service: http://localhost:3013
+    service: http://localhost:3014
     path: /vmwssing/*  
   - service: http_status:404
 
