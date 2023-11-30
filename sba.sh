@@ -14,7 +14,6 @@ CDN_DOMAIN=("cn.azhz.eu.org" "www.who.int" "cdn.anycast.eu.org" "443.cf.bestl.de
 trap "rm -rf $TEMP_DIR; echo -e '\n' ;exit 1" INT QUIT TERM EXIT
 
 mkdir -p $TEMP_DIR
-mkdir /root/temp
 
 E[0]="Language:\n 1. English (default) \n 2. 简体中文"
 C[0]="${E[0]}"
@@ -211,7 +210,7 @@ check_install() {
   }&
   [[ ${STATUS[1]} = "$(text 26)" ]] && [ ! -s $WORK_DIR/sing-box ] &&
   {
-    local SING_BOX_LATEST=$(wget --no-check-certificate -qO- "https://api.github.com/repos/SagerNet/sing-box/releases" | awk -F '["v]' '/tag_name.*beta/{print $5; exit}')
+    local SING_BOX_LATEST=$(wget --no-check-certificate -qO- "https://api.github.com/repos/SagerNet/sing-box/releases" | awk -F '["v]' '/tag_name/{print $5; exit}')
     SING_BOX_LATEST=${SING_BOX_LATEST:-'1.7.0'}
     wget --no-check-certificate -c $TEMP_DIR/sing-box.tar.gz ${GH_PROXY}https://github.com/SagerNet/sing-box/releases/download/v$SING_BOX_LATEST/sing-box-$SING_BOX_LATEST-linux-$SING_BOX_ARCH.tar.gz -qO- | tar xz -C $TEMP_DIR sing-box-$SING_BOX_LATEST-linux-$SING_BOX_ARCH/sing-box
     mv $TEMP_DIR/sing-box-$SING_BOX_LATEST-linux-$SING_BOX_ARCH/sing-box $TEMP_DIR >/dev/null 2>&1
