@@ -234,13 +234,17 @@ EOF
       rc-update add local >/dev/null 2>&1
     else
       systemctl enable --now $APP
+    fi
 
+    
   elif [ "$ENABLE_DISABLE" = 'disable' ]; then
     if [ "$SYSTEM" = 'Alpine' ]; then
       systemctl stop $APP
       rm -f /etc/local.d/$APP.start
     else
       systemctl disable --now $APP
+    fi
+    
   fi
 }
 
