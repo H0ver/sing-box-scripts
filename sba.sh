@@ -754,7 +754,7 @@ create_shortcut() {
   cat > $WORK_DIR/sb.sh << EOF
 #!/usr/bin/env bash
 
-bash <(wget --no-check-certificate -qO- https://raw.githubusercontent.com/fscarmen/sba/main/sba.sh) \$1
+bash <(wget --no-check-certificate -qO- https://raw.githubusercontent.com/H0ver/sing-box-scripts/main/sba.sh) \$1
 EOF
   chmod +x $WORK_DIR/sb.sh
   ln -sf $WORK_DIR/sb.sh /usr/bin/sb
