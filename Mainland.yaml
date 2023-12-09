@@ -1,0 +1,16 @@
+# NAME: Mainland
+# AUTHOR: nobody
+# REPO: https://github.com/nobody
+# UPDATED: 2023-12-07 16:36:35
+# DOMAIN: 0
+# DOMAIN-SUFFIX: 0
+# IP-CIDR: 0
+# IP-CIDR6: 0
+# TOTAL: 0
+payload:
+  - DOMAIN-SUFFIX,ioumeiya.com
+  - DOMAIN-SUFFIX,meitanjianghu.com
+  - DOMAIN-SUFFIX,jump.webz.cf
+  - DOMAIN-SUFFIX,mylog.wang
+  - DOMAIN-SUFFIX,shui.press
+  - DOMAIN-SUFFIX,xues.work
