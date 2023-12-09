@@ -1,1 +1,16 @@
-
+# NAME: Overseas
+# AUTHOR: nobody
+# REPO: https://github.com/nobody
+# UPDATED: 2023-12-31 00:00:00
+# DOMAIN: 0
+# DOMAIN-SUFFIX: 0
+# IP-CIDR: 0
+# IP-CIDR6: 0
+# TOTAL: 0
+payload:
+  - DOMAIN-SUFFIX,ipleak.net
+  - DOMAIN-SUFFIX,whoer.net
+  - DOMAIN-SUFFIX,freenom.com
+  - DOMAIN-SUFFIX,mylog.wang
+  - DOMAIN-SUFFIX,shui.press
+  - DOMAIN-SUFFIX,xues.work
