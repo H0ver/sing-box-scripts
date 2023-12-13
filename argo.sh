@@ -577,7 +577,7 @@ menu_setting() {
     OPTION[4]="4.  $(text 58)"
     OPTION[5]="5.  $(text 64)"
 
-    ACTION[1]() { install_argo; export_list; create_shortcut; exit; }
+    ACTION[1]() { install_argo; create_shortcut; exit; }
     ACTION[2]() { bash <(wget --no-check-certificate -qO- "https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcp.sh"); exit; }
     ACTION[3]() { bash <(wget --no-check-certificate -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-box.sh) -$L; exit; }
     ACTION[4]() { bash <(wget --no-check-certificate -qO- https://raw.githubusercontent.com/fscarmen/argox/main/argox.sh) -$L; exit; }
