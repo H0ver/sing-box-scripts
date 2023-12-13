@@ -540,7 +540,7 @@ version() {
 
 # 判断当前 sba 的运行状态，并对应的给菜单和动作赋值
 menu_setting() {
-  OPTION[0]="0. $(text 35)"
+  OPTION[0]="0.  $(text 35)"
   ACTION[0]() { exit; }
 
   if [[ ${STATUS[*]} =~ $(text 27)|$(text 28) ]]; then
