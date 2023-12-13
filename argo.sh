@@ -395,7 +395,6 @@ EOF
 # 安装 sba 主程序
 install_argo() {
   argo_variable
-  sing_box_variable
   wait
   [ ! -d /etc/systemd/system ] && mkdir -p /etc/systemd/system
   mkdir -p $WORK_DIR/sing-box-conf $WORK_DIR/logs $WORK_DIR/cert && echo "$L" > $WORK_DIR/language
