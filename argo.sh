@@ -407,7 +407,7 @@ install_argo() {
     ARGO_RUNS="$WORK_DIR/cloudflared tunnel --edge-ip-version auto --protocol http2 run --token ${ARGO_TOKEN}"
   else
     METRICS_PORT=$(shuf -i 1000-65535 -n 1)
-    ARGO_RUNS="$WORK_DIR/cloudflared tunnel --edge-ip-version auto --no-autoupdate --protocol http2 --no-tls-verify --metrics 0.0.0.0:$METRICS_PORT --url https://localhost:3001"
+    ARGO_RUNS="$WORK_DIR/cloudflared tunnel --edge-ip-version auto --no-autoupdate --protocol http2 --no-tls-verify --metrics 0.0.0.0:$METRICS_PORT --url https://localhost:3011"
   fi
 
   # 生成100年的自签证书
@@ -470,7 +470,7 @@ change_argo() {
     *--token* )
       ARGO_TYPE='Token'; ARGO_DOMAIN="$(grep -m1 '^vless' $WORK_DIR/list | sed "s@.*host=\(.*\)&.*@\1@g")" ;;
     * )
-      ARGO_TYPE='Try'; ARGO_DOMAIN=$(wget -qO- http://localhost:$(ps -ef | awk -F '0.0.0.0:' '/cloudflared.*:3010/{print $2}' | awk 'NR==1 {print $1}')/quicktunnel | cut -d\" -f4) ;;
+      ARGO_TYPE='Try'; ARGO_DOMAIN=$(wget -qO- http://localhost:$(ps -ef | awk -F '0.0.0.0:' '/cloudflared.*:3011/{print $2}' | awk 'NR==1 {print $1}')/quicktunnel | cut -d\" -f4) ;;
   esac
 
   hint "\n $(text 40) \n"
@@ -480,7 +480,7 @@ change_argo() {
       1 ) cmd_systemctl disable argo
           [ -s $WORK_DIR/tunnel.json ] && rm -f $WORK_DIR/tunnel.{json,yml}
           METRICS_PORT=$(shuf -i 1000-65535 -n 1)
-          sed -i "s@ExecStart.*@ExecStart=$WORK_DIR/cloudflared tunnel --edge-ip-version auto --protocol http2 --no-autoupdate --protocol http2 --no-tls-verify --metrics 0.0.0.0:$METRICS_PORT --url https://localhost:3010@g" /etc/systemd/system/argo.service
+          sed -i "s@ExecStart.*@ExecStart=$WORK_DIR/cloudflared tunnel --edge-ip-version auto --protocol http2 --no-autoupdate --protocol http2 --no-tls-verify --metrics 0.0.0.0:$METRICS_PORT --url https://localhost:3011@g" /etc/systemd/system/argo.service
           ;;
       2 ) argo_variable
           cmd_systemctl disable argo
@@ -543,7 +543,7 @@ menu_setting() {
   if [[ ${STATUS[*]} =~ $(text 27)|$(text 28) ]]; then
     if [ -s $WORK_DIR/cloudflared ]; then
       ARGO_VERSION=$($WORK_DIR/cloudflared -v | awk '{print $3}' | sed "s@^@Version: &@g")
-      [ $(ps -ef | grep "metrics.*:3001" | wc -l) -gt 1 ] && ARGO_CHECKHEALTH="$(text 46): $(wget --no-check-certificate -qO- http://localhost:$(ps -ef | awk -F '0.0.0.0:' '/cloudflared.*:3010/{print $2}' | awk 'NR==1 {print $1}')/healthcheck | sed "s/OK/$(text 37)/")"
+      [ $(ps -ef | grep "metrics.*:3011" | wc -l) -gt 1 ] && ARGO_CHECKHEALTH="$(text 46): $(wget --no-check-certificate -qO- http://localhost:$(ps -ef | awk -F '0.0.0.0:' '/cloudflared.*:3011/{print $2}' | awk 'NR==1 {print $1}')/healthcheck | sed "s/OK/$(text 37)/")"
     fi
 
 
