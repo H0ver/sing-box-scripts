@@ -161,13 +161,6 @@ translate() {
   [[ "$ZH" =~ ^\[\".+\"\]$ ]] && cut -d \" -f2 <<< "$ZH"
 }
 
-# 脚本当天及累计运行次数统计
-statistics_of_run-times() {
-  local COUNT=$(wget -qO- --tries=2 --timeout=2 "https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffscarmen%2Fsba%2Fmain%2Fsba.sh" 2>&1 | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+") &&
-  TODAY=$(cut -d " " -f1 <<< "$COUNT") &&
-  TOTAL=$(cut -d " " -f3 <<< "$COUNT")
-}
-
 # 选择中英语言
 select_language() {
   if [ -z "$L" ]; then
@@ -196,7 +189,12 @@ check_arch() {
 
 # 查安装及运行状态，下标0: argo，下标1: sing-box，下标2：docker；状态码: 26 未安装， 27 已安装未运行， 28 运行中
 check_install() {
-  STATUS[0]=$(text 26) && [ -s /etc/systemd/system/argo.service ] && STATUS[0]=$(text 27) && [ "$(systemctl is-active argo)" = 'active' ] && STATUS[0]=$(text 28)&
+  STATUS[0]=$(text 26) && [ -s /etc/systemd/system/argo.service ] && STATUS[0]=$(text 27) && [ "$(systemctl is-active argo)" = 'active' ] && STATUS[0]=$(text 28)
+  [[ ${STATUS[0]} = "$(text 26)" ]] && [ ! -s $WORK_DIR/cloudflared ] &&
+  {
+    wget --no-check-certificate -qO $TEMP_DIR/cloudflared ${GH_PROXY}https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-$ARGO_ARCH >/dev/null 2>&1
+    chmod +x $TEMP_DIR/cloudflared >/dev/null 2>&1
+  }&
 }
 
 # 为了适配 alpine，定义 cmd_systemctl 的函数
@@ -392,11 +390,11 @@ ingress:
 EOF
 }
 
-# 安装 sba 主程序
+# 安装 argo 主程序
 install_argo() {
   argo_variable
   [ ! -d /etc/systemd/system ] && mkdir -p /etc/systemd/system
-  mkdir -p $WORK_DIR/sing-box-conf $WORK_DIR/logs $WORK_DIR/cert && echo "$L" > $WORK_DIR/language
+  mkdir -p $WORK_DIR/cert && echo "$L" > $WORK_DIR/language
   [ -s "$VARIABLE_FILE" ] && cp $VARIABLE_FILE $WORK_DIR/
   # Argo 生成守护进程文件
   local i=1
@@ -537,7 +535,7 @@ version() {
   fi
 }
 
-# 判断当前 sba 的运行状态，并对应的给菜单和动作赋值
+# 判断当前 argo 的运行状态，并对应的给菜单和动作赋值
 menu_setting() {
   OPTION[0]="0.  $(text 35)"
   ACTION[0]() { exit; }
