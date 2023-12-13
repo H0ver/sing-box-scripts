@@ -548,7 +548,7 @@ menu_setting() {
 
 
     OPTION[1]="1 .  $(text 29)"
-    [ ${STATUS[0]} = "$(text 28)" ] && AEGO_MEMORY="$(text 52): $(awk '/VmRSS/{printf "%.1f\n", $2/1024}' /proc/$(awk '/\/etc\/sba\/cloudflared/{print $1}' <<< "$PS_LIST")/status) MB" && OPTION[2]="2 .  $(text 27) Argo (sb -a)" || OPTION[2]="2 .  $(text 28) Argo (argo -a)"
+    [ ${STATUS[0]} = "$(text 28)" ] && AEGO_MEMORY="$(text 52): $(awk '/VmRSS/{printf "%.1f\n", $2/1024}' /proc/$(awk '/\/etc\/argo\/cloudflared/{print $1}' <<< "$PS_LIST")/status) MB" && OPTION[2]="2 .  $(text 27) Argo (sb -a)" || OPTION[2]="2 .  $(text 28) Argo (argo -a)"
     OPTION[4]="4 .  $(text 30)"
     OPTION[5]="5 .  $(text 31)"
     OPTION[6]="6 .  $(text 32)"
