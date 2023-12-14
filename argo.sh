@@ -549,12 +549,12 @@ menu_setting() {
 
     OPTION[1]="1 .  $(text 29)"
     [ ${STATUS[0]} = "$(text 28)" ] && AEGO_MEMORY="$(text 52): $(awk '/VmRSS/{printf "%.1f\n", $2/1024}' /proc/$(awk '/\/etc\/argo\/cloudflared/{print $1}' <<< "$PS_LIST")/status) MB" && OPTION[2]="2 .  $(text 27) Argo (argo -a)" || OPTION[2]="2 .  $(text 28) Argo (argo -a)"
-    OPTION[3]="3 .  $(text 30)"
-    OPTION[4]="4 .  $(text 31)"
-    OPTION[5]="5 .  $(text 32)"
-    OPTION[6]="6 .  $(text 33)"
-    OPTION[7]="7 .  $(text 51)"
-    OPTION[8]="8 .  $(text 58)"
+    OPTION[3]="3.  $(text 30)"
+    OPTION[4]="4.  $(text 31)"
+    OPTION[5]="5.  $(text 32)"
+    OPTION[6]="6.  $(text 33)"
+    OPTION[7]="7.  $(text 51)"
+    OPTION[8]="8.  $(text 58)"
     OPTION[9]="9.  $(text 64)"
 
     ACTION[1]() { export_list; }
