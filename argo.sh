@@ -350,8 +350,8 @@ check_dependencies() {
 
   # 检测 Linux 系统的依赖，升级库并重新安装依赖
   unset DEPS_CHECK DEPS_INSTALL DEPS
-  DEPS_CHECK=("ping" "wget" "systemctl" "ip" "tar" "bash" "openssl")
-  DEPS_INSTALL=("iputils-ping" "wget" "systemctl" "iproute2" "tar" "bash" "openssl")
+  DEPS_CHECK=("ping" "wget" "systemctl" "ip" "tar" "bash" "curl" "openssl")
+  DEPS_INSTALL=("iputils-ping" "wget" "systemctl" "iproute2" "tar" "bash" "curl" "openssl")
   for g in "${!DEPS_CHECK[@]}"; do
     [ ! $(type -p ${DEPS_CHECK[g]}) ] && [[ ! "${DEPS[@]}" =~ "${DEPS_INSTALL[g]}" ]] && DEPS+=(${DEPS_INSTALL[g]})
   done
