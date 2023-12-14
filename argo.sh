@@ -537,7 +537,7 @@ version() {
 
 # 判断当前 argo 的运行状态，并对应的给菜单和动作赋值
 menu_setting() {
-  OPTION[0]="0 .  $(text 35)"
+  OPTION[0]="0.  $(text 35)"
   ACTION[0]() { exit; }
 
   if [[ ${STATUS[*]} =~ $(text 27)|$(text 28) ]]; then
@@ -547,8 +547,8 @@ menu_setting() {
     fi
     [ "$SYSTEM" = 'Alpine' ] && PS_LIST=$(ps -ef) || PS_LIST=$(ps -ef | grep -E 'cloudflared' | awk '{ $1=""; sub(/^ */, ""); print $0 }')
 
-    OPTION[1]="1 .  $(text 29)"
-    [ ${STATUS[0]} = "$(text 28)" ] && AEGO_MEMORY="$(text 52): $(awk '/VmRSS/{printf "%.1f\n", $2/1024}' /proc/$(awk '/\/etc\/argo\/cloudflared/{print $1}' <<< "$PS_LIST")/status) MB" && OPTION[2]="2 .  $(text 27) Argo (argo -a)" || OPTION[2]="2 .  $(text 28) Argo (argo -a)"
+    OPTION[1]="1.  $(text 29)"
+    [ ${STATUS[0]} = "$(text 28)" ] && AEGO_MEMORY="$(text 52): $(awk '/VmRSS/{printf "%.1f\n", $2/1024}' /proc/$(awk '/\/etc\/argo\/cloudflared/{print $1}' <<< "$PS_LIST")/status) MB" && OPTION[2]="2.  $(text 27) Argo (argo -a)" || OPTION[2]="2 .  $(text 28) Argo (argo -a)"
     OPTION[3]="3.  $(text 30)"
     OPTION[4]="4.  $(text 31)"
     OPTION[5]="5.  $(text 32)"
