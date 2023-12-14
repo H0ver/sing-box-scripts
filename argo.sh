@@ -73,8 +73,8 @@ E[27]="close"
 C[27]="关闭"
 E[28]="open"
 C[28]="开启"
-E[29]="View links (sb -n)"
-C[29]="查看节点信息 (sb -n)"
+E[29]="Jump to sing-box (sing-box)"
+C[29]="跳转至sing-box (sing-box)"
 E[30]="Change the Argo tunnel (argo -t)"
 C[30]="更换 Argo 隧道 (argo -t)"
 E[31]="Sync Argo to the latest version (argo -v)"
@@ -547,26 +547,25 @@ menu_setting() {
     fi
     [ "$SYSTEM" = 'Alpine' ] && PS_LIST=$(ps -ef) || PS_LIST=$(ps -ef | grep -E 'cloudflared' | awk '{ $1=""; sub(/^ */, ""); print $0 }')
 
-    OPTION[1]="1 .  "
+    OPTION[1]="1 .  $(text 29)"
     [ ${STATUS[0]} = "$(text 28)" ] && AEGO_MEMORY="$(text 52): $(awk '/VmRSS/{printf "%.1f\n", $2/1024}' /proc/$(awk '/\/etc\/argo\/cloudflared/{print $1}' <<< "$PS_LIST")/status) MB" && OPTION[2]="2 .  $(text 27) Argo (argo -a)" || OPTION[2]="2 .  $(text 28) Argo (argo -a)"
-    OPTION[3]="3 .  "
-    OPTION[4]="4 .  $(text 30)"
-    OPTION[5]="5 .  $(text 31)"
-    OPTION[6]="6 .  $(text 32)"
-    OPTION[7]="7 .  $(text 33)"
-    OPTION[8]="8 .  $(text 51)"
-    OPTION[9]="9 .  $(text 58)"
-    OPTION[10]="10.  $(text 64)"
+    OPTION[3]="3 .  $(text 30)"
+    OPTION[4]="4 .  $(text 31)"
+    OPTION[5]="5 .  $(text 32)"
+    OPTION[6]="6 .  $(text 33)"
+    OPTION[7]="7 .  $(text 51)"
+    OPTION[8]="8 .  $(text 58)"
+    OPTION[9]="9.  $(text 64)"
 
     ACTION[1]() { export_list; }
     [[ ${STATUS[0]} = "$(text 28)" ]] && ACTION[2]() { cmd_systemctl disable argo; [ "$(systemctl is-active argo)" = 'inactive' ] && info "\n Argo $(text 27) $(text 37)" || error " Argo $(text 27) $(text 38) "; } || ACTION[2]() { cmd_systemctl enable argo && [ "$(systemctl is-active argo)" = 'active' ] && info "\n Argo $(text 28) $(text 37)" || error " Argo $(text 28) $(text 38) "; }
-    ACTION[4]() { change_argo; exit; }
-    ACTION[5]() { version; }
-    ACTION[6]() { bash <(wget --no-check-certificate -qO- "https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcp.sh"); exit; }
-    ACTION[7]() { uninstall; exit 0; }
-    ACTION[8]() { bash <(wget --no-check-certificate -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-box.sh) -$L; exit; }
-    ACTION[9]() { bash <(wget --no-check-certificate -qO- https://raw.githubusercontent.com/fscarmen/argox/main/argox.sh) -$L; exit; }
-    ACTION[10]() { bash <(wget --no-check-certificate -qO- https://tcp.hy2.sh/); exit; }
+    ACTION[3]() { change_argo; exit; }
+    ACTION[4]() { version; }
+    ACTION[5]() { bash <(wget --no-check-certificate -qO- "https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcp.sh"); exit; }
+    ACTION[6]() { uninstall; exit 0; }
+    ACTION[7]() { bash <(wget --no-check-certificate -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-box.sh) -$L; exit; }
+    ACTION[8]() { bash <(wget --no-check-certificate -qO- https://raw.githubusercontent.com/fscarmen/argox/main/argox.sh) -$L; exit; }
+    ACTION[9]() { bash <(wget --no-check-certificate -qO- https://tcp.hy2.sh/); exit; }
 
   else
     OPTION[1]="1.  $(text 34)"
