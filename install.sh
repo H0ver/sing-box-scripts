@@ -277,7 +277,7 @@ download_sing-box() {
         SING_BOX_VERSION=${SING_BOX_VERSION_TEMP:1}
     fi
     LOGI "将选择使用版本:${SING_BOX_VERSION}"
-    local DOWANLOAD_URL="https://mirror.ghproxy.com/https://github.com/SagerNet/sing-box/releases/download/${SING_BOX_VERSION_TEMP}/sing-box-${SING_BOX_VERSION}-linux-${OS_ARCH}.tar.gz"
+    local DOWANLOAD_URL="https://github.com/SagerNet/sing-box/releases/download/${SING_BOX_VERSION_TEMP}/sing-box-${SING_BOX_VERSION}-linux-${OS_ARCH}.tar.gz"
 
     #here we need create directory for sing-box
     create_or_delete_path 1
@@ -299,7 +299,7 @@ download_config() {
         mkdir -p ${CONFIG_FILE_PATH}
     fi
     if [[ ! -f "${CONFIG_FILE_PATH}/config.json" ]]; then
-        wget --no-check-certificate -O ${CONFIG_FILE_PATH}/config.json https://mirror.ghproxy.com/https://raw.githubusercontent.com/H0ver/sing-box-scripts/main/config.json
+        wget --no-check-certificate -O ${CONFIG_FILE_PATH}/config.json https://raw.githubusercontent.com/H0ver/sing-box-scripts/main/config.json
         if [[ $? -ne 0 ]]; then
             LOGE "下载sing-box配置模板失败,请检查网络"
             exit 1
