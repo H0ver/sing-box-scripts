@@ -557,7 +557,7 @@ menu_setting() {
     OPTION[8]="8.  $(text 58)"
     OPTION[9]="9.  $(text 64)"
 
-    ACTION[1]() { export_list; }
+    ACTION[1]() { bash <(curl -s -L https://raw.githubusercontent.com/H0ver/sing-box-install/main/install.sh); exit; }
     [[ ${STATUS[0]} = "$(text 28)" ]] && ACTION[2]() { cmd_systemctl disable argo; [ "$(systemctl is-active argo)" = 'inactive' ] && info "\n Argo $(text 27) $(text 37)" || error " Argo $(text 27) $(text 38) "; } || ACTION[2]() { cmd_systemctl enable argo && [ "$(systemctl is-active argo)" = 'active' ] && info "\n Argo $(text 28) $(text 37)" || error " Argo $(text 28) $(text 38) "; }
     ACTION[3]() { change_argo; exit; }
     ACTION[4]() { version; }
