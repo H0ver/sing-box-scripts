@@ -381,10 +381,14 @@ ingress:
     path: /vmwssing/*
   - hostname: ${ARGO_DOMAIN}
     service: http://localhost:3021
-    path: /vlupsing/*  
+    path: /vlupsing/*
   - hostname: ${ARGO_DOMAIN}
     service: http://localhost:3022
-    path: /vlwssing/*  
+    path: /vlwssing/*
+  - hostname: ${ARGO_DOMAIN}
+    service: http://localhost:8443
+    originRequest:
+      noTLSVerify: true
   - service: http_status:404
 
 EOF
