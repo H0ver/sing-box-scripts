@@ -397,7 +397,7 @@ ingress:
     path: /vmwssing/*
   - hostname: ${ARGO_DOMAIN}
     service: http://localhost:3013
-    path: /trwssing/*  
+    path: /trwssing/*
   - service: http_status:404
 EOF
 }
