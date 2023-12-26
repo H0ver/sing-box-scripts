@@ -486,66 +486,6 @@ http {
       ssl_stapling_verify        off;
       ssl_early_data             on;
 
-      # 反代 sing-box vless httpupgrade
-      location /vlup$WS_PATH {
-        if (\$http_upgrade != "websocket") {
-           return 404;
-        }
-        proxy_pass                          http://127.0.0.1:3011;
-        proxy_http_version                  1.1;
-        proxy_set_header Upgrade            \$http_upgrade;
-        proxy_set_header Connection         "upgrade";
-        proxy_set_header X-Real-IP          \$remote_addr;
-        proxy_set_header X-Forwarded-For    \$proxy_add_x_forwarded_for;
-        proxy_set_header Host               \$host;
-        proxy_redirect                      off;
-      }
-
-      # 反代 sing-box vmess httpupgrade
-      location /vmup$WS_PATH {
-        if (\$http_upgrade != "websocket") {
-           return 404;
-        }
-        proxy_pass                          http://127.0.0.1:3012;
-        proxy_http_version                  1.1;
-        proxy_set_header Upgrade            \$http_upgrade;
-        proxy_set_header Connection         "upgrade";
-        proxy_set_header X-Real-IP          \$remote_addr;
-        proxy_set_header X-Forwarded-For    \$proxy_add_x_forwarded_for;
-        proxy_set_header Host               \$host;
-        proxy_redirect                      off;
-      }
-
-      # 反代 sing-box vless websocket
-      location /vlws$WS_PATH {
-        if (\$http_upgrade != "websocket") {
-           return 404;
-        }
-        proxy_pass                          http://127.0.0.1:3013;
-        proxy_http_version                  1.1;
-        proxy_set_header Upgrade            \$http_upgrade;
-        proxy_set_header Connection         "upgrade";
-        proxy_set_header X-Real-IP          \$remote_addr;
-        proxy_set_header X-Forwarded-For    \$proxy_add_x_forwarded_for;
-        proxy_set_header Host               \$host;
-        proxy_redirect                      off;
-      }
-
-      # 反代 sing-box vmess websocket
-      location /vmws$WS_PATH {
-        if (\$http_upgrade != "websocket") {
-           return 404;
-        }
-        proxy_pass                          http://127.0.0.1:3014;
-        proxy_http_version                  1.1;
-        proxy_set_header Upgrade            \$http_upgrade;
-        proxy_set_header Connection         "upgrade";
-        proxy_set_header X-Real-IP          \$remote_addr;
-        proxy_set_header X-Forwarded-For    \$proxy_add_x_forwarded_for;
-        proxy_set_header Host               \$host;
-        proxy_redirect                      off;
-      }
-
 EOF
   [ -n "$METRICS_PORT" ] && cat >> $WORK_DIR/nginx.conf << EOF
 
@@ -572,7 +512,19 @@ protocol: http2
 
 ingress:
   - hostname: ${ARGO_DOMAIN}
-    service: https://localhost:3010
+    service: http://localhost:3011
+    path: /vmupsing/*
+  - hostname: ${ARGO_DOMAIN}
+    service: http://localhost:3012
+    path: /vmwssing/*
+  - hostname: ${ARGO_DOMAIN}
+    service: http://localhost:3021
+    path: /vlupsing/*
+  - hostname: ${ARGO_DOMAIN}
+    service: http://localhost:3022
+    path: /vlwssing/*
+  - hostname: ${ARGO_DOMAIN}
+    service: http://localhost:8443
     originRequest:
       noTLSVerify: true
   - service: http_status:404
@@ -641,37 +593,10 @@ EOF
     },
     "inbounds":[
         {
-            "type":"vless",
-            "tag":"vless_up-in",
-            "listen":"127.0.0.1",
-            "listen_port":3011,
-            "sniff":true,
-            "sniff_override_destination":true,
-            "transport":{
-                "type":"httpupgrade",
-                "path":"/vlup${WS_PATH}"
-            },
-            "multiplex":{
-                "enabled":true,
-                "padding":true,
-                "brutal":{
-                    "enabled":true,
-                    "up_mbps":1000,
-                    "down_mbps":1000
-                }
-            },
-            "users":[
-                {
-                    "uuid":"${UUID}",
-                    "flow":""
-                }
-            ]
-        },
-        {
             "type":"vmess",
             "tag":"vmess_up-in",
             "listen":"127.0.0.1",
-            "listen_port":3012,
+            "listen_port":3011,
             "sniff":true,
             "sniff_override_destination":true,
             "transport":{
@@ -695,39 +620,10 @@ EOF
             ]
         },
         {
-            "type":"vless",
-            "tag":"vless_ws-in",
-            "listen":"127.0.0.1",
-            "listen_port":3013,
-            "sniff":true,
-            "sniff_override_destination":true,
-            "transport":{
-                "type":"ws",
-                "path":"/vlws${WS_PATH}",
-                "max_early_data":2048,
-                "early_data_header_name":"Sec-WebSocket-Protocol"
-            },
-            "multiplex":{
-                "enabled":true,
-                "padding":true,
-                "brutal":{
-                    "enabled":true,
-                    "up_mbps":1000,
-                    "down_mbps":1000
-                }
-            },
-            "users":[
-                {
-                    "uuid":"${UUID}",
-                    "flow":""
-                }
-            ]
-        },
-        {
             "type":"vmess",
             "tag":"vmess_ws-in",
             "listen":"127.0.0.1",
-            "listen_port":3014,
+            "listen_port":3012,
             "sniff":true,
             "sniff_override_destination":true,
             "transport":{
@@ -749,6 +645,62 @@ EOF
                 {
                     "uuid":"${UUID}",
                     "alterId":0
+                }
+            ]
+        },
+        {
+            "type":"vless",
+            "tag":"vless_up-in",
+            "listen":"127.0.0.1",
+            "listen_port":3021,
+            "sniff":true,
+            "sniff_override_destination":true,
+            "transport":{
+                "type":"httpupgrade",
+                "path":"/vlup${WS_PATH}"
+            },
+            "multiplex":{
+                "enabled":true,
+                "padding":true,
+                "brutal":{
+                    "enabled":true,
+                    "up_mbps":1000,
+                    "down_mbps":1000
+                }
+            },
+            "users":[
+                {
+                    "uuid":"${UUID}",
+                    "flow":""
+                }
+            ]
+        },
+        {
+            "type":"vless",
+            "tag":"vless_ws-in",
+            "listen":"127.0.0.1",
+            "listen_port":3022,
+            "sniff":true,
+            "sniff_override_destination":true,
+            "transport":{
+                "type":"ws",
+                "path":"/vlws${WS_PATH}",
+                "max_early_data":2048,
+                "early_data_header_name":"Sec-WebSocket-Protocol"
+            },
+            "multiplex":{
+                "enabled":true,
+                "padding":true,
+                "brutal":{
+                    "enabled":true,
+                    "up_mbps":1000,
+                    "down_mbps":1000
+                }
+            },
+            "users":[
+                {
+                    "uuid":"${UUID}",
+                    "flow":""
                 }
             ]
         }
