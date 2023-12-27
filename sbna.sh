@@ -524,7 +524,7 @@ ingress:
     service: http://localhost:3022
     path: /vlwssing/*
   - hostname: ${ARGO_DOMAIN}
-    service: http://localhost:8443
+    service: https://localhost:8443
     originRequest:
       noTLSVerify: true
   - service: http_status:404
