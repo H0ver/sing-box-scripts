@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # 当前脚本版本号
-VERSION=1.0.2
+VERSION=1.0.3
 
 # 各变量默认值
 GH_PROXY='https://mirror.ghproxy.com/'
@@ -9,7 +9,7 @@ WS_PATH_DEFAULT='sing'
 WORK_DIR='/etc/argo'
 TEMP_DIR='/tmp/argo'
 TLS_SERVER=addons.mozilla.org
-CDN_DOMAIN=("cn.azhz.eu.org" "www.who.int" "cdn.anycast.eu.org" "443.cf.bestl.de" "cfip.gay")
+CDN_DOMAIN=("cn.azhz.eu.org" "www.who.int" "skk.moe" "time.cloudflare.com" "csgo.com")
 
 trap "rm -rf $TEMP_DIR; echo -e '\n' ;exit 1" INT QUIT TERM EXIT
 
@@ -157,7 +157,7 @@ text() { grep -q '\$' <<< "${E[$*]}" && eval echo "\$(eval echo "\${${L}[$*]}")"
 # 自定义友道或谷歌翻译函数
 translate() {
   [ -n "$@" ] && EN="$@"
-  ZH=$(wget --no-check-certificate -qO- --tries=1 --timeout=2 "https://translate.google.com/translate_a/t?client=any_client_id_works&sl=en&tl=zh&q=${EN//[[:space:]]/}")
+  ZH=$(wget --no-check-certificate -qO- --tries=1 --timeout=2 "https://translate.google.com/translate_a/t?client=any_client_id_works&sl=en&tl=zh&q=${EN//[[:space:]]/}" 2>/dev/null)
   [[ "$ZH" =~ ^\[\".+\"\]$ ]] && cut -d \" -f2 <<< "$ZH"
 }
 
@@ -390,7 +390,6 @@ ingress:
     originRequest:
       noTLSVerify: true
   - service: http_status:404
-
 EOF
 }
 
@@ -631,4 +630,5 @@ check_dependencies
 check_system_ip
 check_install
 menu_setting
+
 [ -z "$VARIABLE_FILE" ] && menu || ACTION[1]
