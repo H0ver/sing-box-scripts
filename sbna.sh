@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # 当前脚本版本号
-VERSION=1.0.2
+VERSION=1.0.3
 
 # 各变量默认值
 GH_PROXY='https://mirror.ghproxy.com/'
