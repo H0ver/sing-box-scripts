@@ -9,7 +9,7 @@ WS_PATH_DEFAULT='sing'
 WORK_DIR='/etc/sba'
 TEMP_DIR='/tmp/sba'
 TLS_SERVER=addons.mozilla.org
-CDN_DOMAIN=("cn.azhz.eu.org" "www.who.int" "cdn.anycast.eu.org" "443.cf.bestl.de" "cfip.gay")
+CDN_DOMAIN=("cn.azhz.eu.org" "www.who.int" "skk.moe" "time.cloudflare.com" "csgo.com")
 
 trap "rm -rf $TEMP_DIR; echo -e '\n' ;exit 1" INT QUIT TERM EXIT
 
@@ -157,7 +157,7 @@ text() { grep -q '\$' <<< "${E[$*]}" && eval echo "\$(eval echo "\${${L}[$*]}")"
 # 自定义友道或谷歌翻译函数
 translate() {
   [ -n "$@" ] && EN="$@"
-  ZH=$(wget --no-check-certificate -qO- --tries=1 --timeout=2 "https://translate.google.com/translate_a/t?client=any_client_id_works&sl=en&tl=zh&q=${EN//[[:space:]]/}")
+  ZH=$(wget --no-check-certificate -qO- --tries=1 --timeout=2 "https://translate.google.com/translate_a/t?client=any_client_id_works&sl=en&tl=zh&q=${EN//[[:space:]]/}" 2>/dev/null)
   [[ "$ZH" =~ ^\[\".+\"\]$ ]] && cut -d \" -f2 <<< "$ZH"
 }
 
@@ -591,6 +591,12 @@ EOF
         "output":"$WORK_DIR/logs/box.log",
         "timestamp":true
     },
+    "experimental": {
+        "cache_file": {
+            "enabled": true,
+            "path": "$WORK_DIR/cache.db"
+        }
+    },
     "inbounds":[
         {
             "type":"vmess",
@@ -607,7 +613,7 @@ EOF
                 "enabled":true,
                 "padding":true,
                 "brutal":{
-                    "enabled":true,
+                    "enabled":false,
                     "up_mbps":1000,
                     "down_mbps":1000
                 }
@@ -636,7 +642,7 @@ EOF
                 "enabled":true,
                 "padding":true,
                 "brutal":{
-                    "enabled":true,
+                    "enabled":false,
                     "up_mbps":1000,
                     "down_mbps":1000
                 }
@@ -663,7 +669,7 @@ EOF
                 "enabled":true,
                 "padding":true,
                 "brutal":{
-                    "enabled":true,
+                    "enabled":false,
                     "up_mbps":1000,
                     "down_mbps":1000
                 }
@@ -692,7 +698,7 @@ EOF
                 "enabled":true,
                 "padding":true,
                 "brutal":{
-                    "enabled":true,
+                    "enabled":false,
                     "up_mbps":1000,
                     "down_mbps":1000
                 }
@@ -751,19 +757,21 @@ EOF
         }
     ],
     "route":{
-        "geoip":{
-            "download_url":"https://github.com/SagerNet/sing-geoip/releases/latest/download/geoip.db",
-            "download_detour":"direct"
-        },
-        "geosite":{
-            "download_url":"https://github.com/SagerNet/sing-geosite/releases/latest/download/geosite.db",
-            "download_detour":"direct"
-        },
+        "rule_set":[
+            {
+                "tag":"geosite-openai",
+                "type":"remote",
+                "format":"binary",
+                "url":"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-openai.srs"
+            }
+        ],
         "rules":[
             {
-                "geosite":[
-                    "openai"
-                ],
+                "domain":"api.openai.com",
+                "outbound":"warp-IPv4-out"
+            },
+            {
+                "rule_set":"geosite-openai",
                 "outbound":"warp-IPv6-out"
             }
         ]
@@ -1220,4 +1228,5 @@ check_dependencies
 check_system_ip
 check_install
 menu_setting
+
 [ -z "$VARIABLE_FILE" ] && menu || ACTION[1]
